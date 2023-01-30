@@ -8,7 +8,7 @@ interface OwnProps {
 type Props = OwnProps;
 
 const NativePage: FunctionComponent<Props> = (props) => {
-    // Polyfill
+    // Polyfill for older browsers
     useEffect(() => {
         if (!HTMLCanvasElement.prototype.toBlob) {
             Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
@@ -37,7 +37,7 @@ const NativePage: FunctionComponent<Props> = (props) => {
             const image = new Image()
             image.src = blobURL
 
-            image.onload = (a) => {
+            image.onload = async (a) => {
                 // release memory
                 window.URL.revokeObjectURL(blobURL)
 
@@ -52,11 +52,12 @@ const NativePage: FunctionComponent<Props> = (props) => {
                 if (context) {
                     context.drawImage(image, 0, 0, newWidth, newHeight);
 
+                    /*
                     // OPTION 1: LATEST BROWSERS
                     canvas.toBlob((blob) => {
                         // Handle the compressed image...
                         console.log(blob)
-                        /*console.log(`${imageFile.size} => ${blob?.size}`)*/
+                        /!*console.log(`${imageFile.size} => ${blob?.size}`)*!/
 
                         const p = document.createElement('p')
                         p.innerText = `Compressed original image(${imageFile.type}) from ${
@@ -67,8 +68,9 @@ const NativePage: FunctionComponent<Props> = (props) => {
 
                         document.body.append(p)
                     }, imageFile.type, 1)
+                    */
 
-                    /* OPTION 2: OLDER BROWSERS
+                    // OPTION 2: OLDER BROWSERS
                     // TEST Polyfill
                     const binStr = atob(canvas.toDataURL(imageFile.type, 1).split(',')[1]),
                         len = binStr.length,
@@ -78,11 +80,11 @@ const NativePage: FunctionComponent<Props> = (props) => {
                         arr[i] = binStr.charCodeAt(i);
                     }
 
-                    const blob :Blob = new Blob([arr], {type: imageFile.type || 'image/png'})
+                    const blob: Blob = new Blob([arr], {type: imageFile.type || 'image/png'})
 
                     // Handle the compressed image...
                     console.log(blob)
-                    /!*console.log(`${imageFile.size} => ${blob?.size}`)*!/
+                    /*console.log(`${imageFile.size} => ${blob?.size}`)*/
 
                     const p = document.createElement('p')
                     p.innerText = `Compressed original image(${imageFile.type}) from ${
@@ -92,9 +94,21 @@ const NativePage: FunctionComponent<Props> = (props) => {
                     }`
 
                     document.body.append(p)
-                    */
 
                     document.body.append(canvas)
+
+                    // SAVE TO FILE
+                    // create a new handle
+                    const newHandle = await window.showSaveFilePicker();
+
+                    // create a FileSystemWritableFileStream to write to
+                    const writableStream = await newHandle.createWritable();
+
+                    // write our file
+                    await writableStream.write(blob);
+
+                    // close the file and write the contents to disk.
+                    await writableStream.close();
                 }
             }
         }
