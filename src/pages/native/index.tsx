@@ -25,6 +25,8 @@ const NativePage: FunctionComponent<Props> = (props) => {
                     callback(new Blob([arr], {type: type || 'image/png'}));
                 }
             });
+        } else {
+            console.log(`Custom Polyfill NOT set. Browser supports the Canvas.toBlob API`)
         }
     }, []);
 
@@ -41,8 +43,8 @@ const NativePage: FunctionComponent<Props> = (props) => {
                 // release memory
                 window.URL.revokeObjectURL(blobURL)
 
-                const newWidth: number = 720
-                const newHeight: number = 480
+                const newWidth: number = 360
+                const newHeight: number = 240
 
                 const canvas = document.createElement('canvas')
                 canvas.width = newWidth
@@ -52,12 +54,11 @@ const NativePage: FunctionComponent<Props> = (props) => {
                 if (context) {
                     context.drawImage(image, 0, 0, newWidth, newHeight);
 
-                    /*
                     // OPTION 1: LATEST BROWSERS
                     canvas.toBlob((blob) => {
                         // Handle the compressed image...
                         console.log(blob)
-                        /!*console.log(`${imageFile.size} => ${blob?.size}`)*!/
+                        /*console.log(`${imageFile.size} => ${blob?.size}`)*/
 
                         const p = document.createElement('p')
                         p.innerText = `Compressed original image(${imageFile.type}) from ${
@@ -68,35 +69,10 @@ const NativePage: FunctionComponent<Props> = (props) => {
 
                         document.body.append(p)
                     }, imageFile.type, 1)
-                    */
-
-                    // OPTION 2: OLDER BROWSERS
-                    // TEST Polyfill
-                    const binStr = atob(canvas.toDataURL(imageFile.type, 1).split(',')[1]),
-                        len = binStr.length,
-                        arr = new Uint8Array(len);
-
-                    for (let i = 0; i < len; i++) {
-                        arr[i] = binStr.charCodeAt(i);
-                    }
-
-                    const blob: Blob = new Blob([arr], {type: imageFile.type || 'image/png'})
-
-                    // Handle the compressed image...
-                    console.log(blob)
-                    /*console.log(`${imageFile.size} => ${blob?.size}`)*/
-
-                    const p = document.createElement('p')
-                    p.innerText = `Compressed original image(${imageFile.type}) from ${
-                        filesize(imageFile.size)
-                    } to ${
-                        filesize(blob?.size)
-                    }`
-
-                    document.body.append(p)
 
                     document.body.append(canvas)
 
+                    /*
                     // SAVE TO FILE
                     // create a new handle
                     const newHandle = await window.showSaveFilePicker();
@@ -109,6 +85,7 @@ const NativePage: FunctionComponent<Props> = (props) => {
 
                     // close the file and write the contents to disk.
                     await writableStream.close();
+                    */
                 }
             }
         }
